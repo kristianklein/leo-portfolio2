@@ -62,39 +62,28 @@ Then simply log out and log back in for the changes to take effect. It should no
 All of the above is done automatically by running the shell script *scripts/setup_lxc.sh*.
 
 ### Containers
-To setup containers LXC is used, as mentioned above. 
-```
-$lxc-create -n name_of_container -t download -- -d alpine -r 3.4 -a armhf
-```
-What this line of code does, is creating the container. -t download is a template where the linux version is specified via the template options. Which i this case is the alpine version off linux with the version and the processor architecture also selected in the options.
-When the container is created, we start it and goes in to the container to update the packages and install the nessesary programs.
-```
-$lxc-start -n name_of_container
-$lxc-attach -n name_of_container --apk update
-```
-
-After installing LXC, containers can be made. 
+After installing LXC, containers can be created. 
 The command 
 ```
-"lxc-create -n "container name" -t download --d alpine -r 3.4 -a armhf" 
+lxc-create -n <container_name> -t download --d alpine -r 3.4 -a armhf
 ```
 is used to create a container, and the container is started afterwards with the command 
 ```
-"lxc-start -n "container name"".
+lxc-start -n <container_name>
 ```
 You now have two options. Attach to the container, or stay "outside" the container.
 If you do not attach, the line 
 ```
-lxc-attach -n "container name" --
+lxc-attach -n <container_name> --
 ```
 should be written in front of the next commands.
 To attach just write 
 ```
-lxc-attach -n "container name"
+lxc-attach -n <container_name>
 ```
 If you ever forget your container name, you can get a list of containers created on you system by writing 
 ```
-"lxc-ls"
+lxc-ls
 ```
 To make the container up to date, the package list needs to be updated.
 Afterwards you are able to install the necessary software.
@@ -103,17 +92,15 @@ Write
 ```
 apk update
 ```
-Now install lighttpd server and som php-packages for the html part.
+Now install lighttpd server and some php-packages for the HTML part.
 
-write 
+write
 ```
 apk add lighttpd php5 php5-cgi php5-curl php5-fpm 
 ```
 for getting the 5 packages needed.
 
 Next enable "fastcgi protocol" by removing the comment (#) sign in /etc/lighttpd/lighttpd.conf
-
-REMEMBER, THIS IS STILL INSIDE THE CONTAINER!
 
 You are now ready to start the lighttpd service by writing 
 ```
@@ -125,8 +112,7 @@ openrc
 ```
 
 ### Web server
-
-You should now create a html ducoment, to be able to communicate between the two containers.
+You should now create a HTML document, to be able to communicate between the two containers.
 Create a file named "index.php" inside /var/www/localhost/htdocs/  
 write
 ```
@@ -138,12 +124,12 @@ to open up nano text-editor, and inside the document write:
 <!DOCTYPE html>
 <html><body><pre>
 <?php 
-$ch = curl_init(); 
-curl_setopt($ch, CURLOPT_URL, "C2:8080"); 
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); 
-$output = curl_exec($ch);
-curl_close($ch);
-print $output;
+  $ch = curl_init(); 
+  curl_setopt($ch, CURLOPT_URL, "C2:8080"); 
+  curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1); 
+  $output = curl_exec($ch);
+  curl_close($ch);
+  print $output;
 ?>
 </body></html>
 ```
@@ -158,7 +144,7 @@ print $output;
 
 
 ### Port forwarding
-To make web server in container C1 available to the outside, we're using the built-in firewall utility *iptables* to forward all requests on port 80 of the host to port 80 of C1:
+To make the web server in container C1 available to the outside, we're using the built-in firewall utility *iptables* to forward all requests on port 80 of the host to port 80 of C1:
 
 ```
 sudo iptables -t nat -A PREROUTING -i wlan0 -p tcp --dport 80 -j DNAT --to 10.0.3.11:80
